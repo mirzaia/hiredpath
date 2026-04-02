@@ -20,85 +20,54 @@ export default function LandingPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg-primary)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '32px 16px',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8 relative overflow-hidden text-slate-900">
       {/* Background decorations */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(79,70,229,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(79,70,229,0.06) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: '50vh',
-        background: 'radial-gradient(ellipse 70% 50% at 50% -10%, rgba(79,70,229,0.10) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 680 }}>
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-50"
+        style={{
+          backgroundImage: 'linear-gradient(theme(colors.slate.200) 1px, transparent 1px), linear-gradient(90deg, theme(colors.slate.200) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }} 
+      />
+      
+      <div className="relative z-10 w-full max-w-2xl">
         {/* Header */}
-        <div className="animate-fade-in" style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '6px 16px',
-            background: 'rgba(99,102,241,0.1)',
-            border: '1px solid rgba(99,102,241,0.3)',
-            borderRadius: 'var(--radius-full)',
-            marginBottom: 24,
-            fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-primary)',
-          }}>
-            <Sparkles size={14} />
+        <div className="animate-fade-in text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-100 border border-orange-200 rounded-full mb-6 text-sm font-semibold text-orange-600 shadow-sm">
+            <Sparkles size={14} className="text-orange-500" />
             Sr. SDET II Interview Preparation
           </div>
 
-          <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, marginBottom: 16, lineHeight: 1.15 }}>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-slate-900">
             Crack Your{' '}
-            <span style={{
-              background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">
               Dream
             </span>{' '}
             Interview
           </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: 520, margin: '0 auto' }}>
+          <p className="text-lg text-slate-500 max-w-lg mx-auto">
             Your personalized knowledge hub. Master test strategy, microservices, automation, performance, and DevOps — one topic at a time.
           </p>
         </div>
 
         {/* Modules preview */}
-        <div className="animate-slide-up stagger-1" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
+        <div className="animate-slide-up stagger-1 flex gap-2 flex-wrap justify-center mb-10">
           {modules.map(mod => (
-            <div key={mod.id} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 12px',
-              background: `${mod.color}12`,
-              border: `1px solid ${mod.color}30`,
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.8rem', color: mod.color, fontWeight: 500,
-            }}>
+            <div key={mod.id} 
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border rounded-full text-xs font-semibold shadow-sm"
+              style={{ borderColor: `${mod.color}30`, color: mod.color }}
+            >
               <span>{mod.icon}</span>
-              <span style={{ color: 'var(--text-secondary)' }}>{mod.title}</span>
+              <span className="text-slate-600">{mod.title}</span>
             </div>
           ))}
         </div>
 
         {/* Stack selection */}
-        <div
-          className="glass-card animate-slide-up stagger-2"
-          style={{ padding: 28, marginBottom: 20 }}
-        >
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ marginBottom: 6 }}>Choose your tech stacks</h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: 0 }}>
+        <div className="glass-card animate-slide-up stagger-2 p-8 mb-6">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold mb-1.5 mt-0">Choose your tech stacks</h3>
+            <p className="text-sm text-slate-500 m-0">
               Select the languages and tools you'll be tested on. This personalizes your experience — you can change this anytime.
             </p>
           </div>
@@ -107,18 +76,17 @@ export default function LandingPage() {
         </div>
 
         {/* CTA */}
-        <div className="animate-slide-up stagger-3" style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="animate-slide-up stagger-3 flex justify-center">
           <button
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all w-full sm:w-auto min-w-[240px]"
             onClick={handleStart}
-            style={{ minWidth: 200 }}
           >
             {selected.length > 0 ? `Start Prep with ${selected.join(', ')}` : 'Start Prep'}
             <ArrowRight size={18} />
           </button>
         </div>
 
-        <p className="animate-fade-in stagger-4" style={{ textAlign: 'center', marginTop: 16, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+        <p className="animate-fade-in stagger-4 text-center mt-6 text-xs font-medium text-slate-400">
           Your progress is saved locally in your browser.
         </p>
       </div>

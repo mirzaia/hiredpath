@@ -18,54 +18,52 @@ export default function ModulePage() {
   return (
     <div>
       {/* Module header */}
-      <div className="glass-card animate-fade-in" style={{ padding: '28px', marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 16,
-            background: `${mod.color}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '2rem', flexShrink: 0,
-          }}>
+      <div className="glass-card animate-fade-in p-7 mb-8 text-slate-900">
+        <div className="flex flex-wrap items-start gap-5">
+          <div 
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+            style={{ backgroundColor: `${mod.color}15` }}
+          >
             {mod.icon}
           </div>
 
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{
-              fontSize: '0.72rem', fontWeight: 600, color: mod.color,
-              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6
-            }}>
+          <div className="flex-1 min-w-[200px]">
+            <div 
+              className="text-xs font-bold uppercase tracking-wider mb-1.5"
+              style={{ color: mod.color }}
+            >
               Module
             </div>
-            <h1 style={{ marginBottom: 4, fontSize: '1.5rem' }}>{mod.title}</h1>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{mod.subtitle}</p>
+            <h1 className="text-2xl font-bold mb-1 leading-tight">{mod.title}</h1>
+            <p className="m-0 text-slate-500 text-sm leading-relaxed">{mod.subtitle}</p>
           </div>
 
           <ProgressBar variant="circular" pct={pct} color={mod.color} size={80} strokeWidth={7} />
         </div>
 
-        <div style={{ marginTop: 20 }}>
+        <div className="mt-6">
           <ProgressBar pct={pct} color={mod.color} label={`${completed} of ${total} topics completed`} />
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
+        <div className="flex flex-wrap gap-6 mt-5">
           {[
             { icon: BookOpen, label: 'Topics', value: total },
             { icon: Target, label: 'Scenarios', value: totalScenarios },
             { icon: HelpCircle, label: 'Questions', value: totalQuestions },
           ].map(({ icon: Icon, label, value }) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icon size={15} color={mod.color} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{value}</span>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{label}</span>
+            <div key={label} className="flex items-center gap-2">
+              <Icon size={16} style={{ color: mod.color }} />
+              <span className="font-semibold text-slate-900">{value}</span>
+              <span className="text-slate-500 text-sm font-medium">{label}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Topics list */}
-      <h2 style={{ marginBottom: 16, fontSize: '1.05rem', color: 'var(--text-secondary)' }}>Topics</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <h2 className="mb-4 text-lg font-bold text-slate-900">Topics</h2>
+      <div className="flex flex-col gap-0 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
         {mod.topics.map((topic, i) => (
           <TopicCard
             key={topic.id}
@@ -73,6 +71,7 @@ export default function ModulePage() {
             moduleId={mod.id}
             moduleColor={mod.color}
             index={i}
+            isLast={i === mod.topics.length - 1}
           />
         ))}
       </div>

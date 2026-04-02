@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Menu, Activity, LayoutDashboard, HelpCircle, TrendingUp, BookOpen, Settings } from 'lucide-react'
 import SearchBar from './SearchBar.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import modules from '../data/modules.json'
@@ -36,94 +36,106 @@ export default function Header({ breadcrumb }) {
     navigate(url)
   }
 
+  const navItems = [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/questions', icon: HelpCircle, label: 'Tests' },
+    { to: '/progress', icon: TrendingUp, label: 'Progress' },
+    { to: '/resources', icon: BookOpen, label: 'Resources' },
+  ]
+
   return (
-    <header className="page-header">
-      <button
-        className="btn btn-ghost"
-        style={{ padding: 8, flexShrink: 0 }}
-        onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-      >
-        <Menu size={20} />
-      </button>
-
-      {/* Breadcrumb */}
-      {breadcrumb && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-muted)', flexShrink: 0 }}>
-          {breadcrumb.map((crumb, i) => (
-            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {i > 0 && <span style={{ color: 'var(--text-muted)', opacity: 0.4 }}>/</span>}
-              <span style={{ color: i === breadcrumb.length - 1 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                {crumb}
-              </span>
+    <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/dashboard" className="flex items-center gap-2 text-white no-underline hover:text-white">
+            <Activity className="w-6 h-6 text-orange-400" />
+            <span className="font-bold text-lg tracking-tight">
+              Hired<span className="text-orange-400">Path</span>
             </span>
-          ))}
-        </div>
-      )}
+          </Link>
 
-      <div style={{ flex: 1 }} />
-
-      {/* Search */}
-      <div style={{ position: 'relative', width: '100%', maxWidth: 320 }}>
-        <SearchBar
-          value={query}
-          onChange={setQuery}
-          placeholder="Search topics, questions..."
-          style={{ width: '100%' }}
-        />
-        {focused && results.length > 0 && (
-          <div style={{
-            position: 'absolute', top: '110%', left: 0, right: 0,
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 10, zIndex: 200,
-            boxShadow: 'var(--shadow-lg)',
-            overflow: 'hidden',
-          }}>
-            {results.map((r, i) => (
-              <button
-                key={i}
-                onClick={() => handleSelect(r.url)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'flex-start',
-                  gap: 10, padding: '10px 14px', background: 'none', border: 'none',
-                  cursor: 'pointer', textAlign: 'left', borderBottom: i < results.length - 1 ? '1px solid var(--glass-border)' : 'none',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--glass-bg)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+          {/* Center Nav Links */}
+          <div className="hidden md:flex items-center gap-1 mx-8 text-white">
+            {navItems.map(({ to, icon: Icon, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors no-underline ${
+                  isActive ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
               >
-                <span style={{
-                  fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase',
-                  color: r.color, padding: '2px 6px', background: `${r.color}18`,
-                  borderRadius: 4, flexShrink: 0, marginTop: 2
-                }}>
-                  {r.type}
-                </span>
-                <div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.3 }}>{r.title}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.subtitle}</div>
-                </div>
-              </button>
+                <Icon className="w-4 h-4" />
+                <span>{label}</span>
+              </NavLink>
             ))}
           </div>
-        )}
-        <input
-          style={{ position: 'absolute', inset: 0, opacity: 0, pointerEvents: 'none' }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-        />
-        {/* invisible focus tracker */}
-        <div
-          style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
-          onFocus={() => setFocused(true)}
-        />
+
+          <div className="flex-1" />
+
+          {/* Search */}
+          <div className="relative w-full max-w-xs mx-4 text-slate-900 hidden sm:block">
+            <SearchBar
+              value={query}
+              onChange={setQuery}
+              placeholder="Search..."
+              className="w-full text-sm bg-slate-800 text-slate-200 border-slate-700 focus:bg-slate-700"
+            />
+            {focused && results.length > 0 && (
+              <div className="absolute top-12 left-0 right-0 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden text-slate-900">
+                {results.map((r, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSelect(r.url)}
+                    className={`w-full flex items-start gap-3 p-3 text-left transition-colors hover:bg-slate-50 ${i < results.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  >
+                    <span 
+                      className="text-[0.65rem] font-bold uppercase px-2 py-0.5 rounded flex-shrink-0 mt-0.5"
+                      style={{ color: r.color, backgroundColor: `${r.color}15` }}
+                    >
+                      {r.type}
+                    </span>
+                    <div>
+                      <div className="text-sm font-medium text-slate-900 leading-tight">{r.title}</div>
+                      <div className="text-xs text-slate-500 mt-1">{r.subtitle}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <input
+              className="absolute inset-0 opacity-0 pointer-events-none"
+              onFocus={() => setFocused(true)}
+              onBlur={() => setTimeout(() => setFocused(false), 200)}
+            />
+          </div>
+
+          {/* Settings */}
+          <button 
+            onClick={() => { dispatch({ type: 'RESET_ONBOARDING' }); navigate('/'); }}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white font-medium transition-colors"
+            title="Reset Stacks & Onboarding"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
-      <div
-        style={{ position: 'absolute', inset: 0, zIndex: -1 }}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setTimeout(() => setFocused(false), 200)}
-      />
+      {/* Breadcrumbs Top Bar */}
+      {breadcrumb && breadcrumb.length > 0 && (
+        <div className="bg-slate-800 border-t border-slate-700 text-slate-300 px-4 sm:px-6 lg:px-8 py-2 text-xs font-medium flex gap-2">
+          <div className="max-w-7xl mx-auto w-full flex gap-2 items-center">
+            {breadcrumb.map((crumb, i) => (
+              <span key={i} className="flex gap-2 items-center">
+                {i > 0 && <span className="opacity-50">/</span>}
+                <span className={i === breadcrumb.length - 1 ? 'text-white font-semibold' : ''}>
+                  {crumb}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

@@ -12,44 +12,39 @@ function ModuleCard({ mod, index }) {
   return (
     <Link
       to={`/module/${mod.id}`}
-      style={{ textDecoration: 'none' }}
-      className={`glass-card interactive animate-slide-up stagger-${Math.min(index + 1, 5)}`}
+      className={`glass-card interactive animate-slide-up stagger-${Math.min(index + 1, 5)} flex flex-col p-6 no-underline text-slate-900 group`}
     >
-      <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 12,
-              background: `${mod.color}18`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.4rem', flexShrink: 0,
-            }}>
-              {mod.icon}
-            </div>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.3 }}>{mod.title}</h3>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{mod.subtitle}</p>
-            </div>
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 transition-transform group-hover:scale-105"
+            style={{ backgroundColor: `${mod.color}15` }}
+          >
+            {mod.icon}
           </div>
-          <ProgressBar variant="circular" pct={pct} color={mod.color} size={56} strokeWidth={5} />
+          <div>
+            <h3 className="m-0 text-base font-bold leading-tight text-slate-900">{mod.title}</h3>
+            <p className="m-0 text-xs text-slate-500 mt-1">{mod.subtitle}</p>
+          </div>
         </div>
+        <ProgressBar variant="circular" pct={pct} color={mod.color} size={56} strokeWidth={5} />
+      </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <ProgressBar pct={pct} color={mod.color} label={`${completed} of ${total} topics done`} />
+      <div className="mb-6">
+        <ProgressBar pct={pct} color={mod.color} label={`${completed} of ${total} topics done`} />
+      </div>
+
+      <div className="flex gap-4 mt-auto">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>{total} topics</span>
         </div>
-
-        <div style={{ display: 'flex', gap: 16, marginTop: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            <BookOpen size={13} />
-            <span>{total} topics</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            <HelpCircle size={13} />
-            <span>{totalQuestions} questions</span>
-          </div>
-          <div style={{ marginLeft: 'auto', color: mod.color }}>
-            <ArrowRight size={16} />
-          </div>
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+          <HelpCircle className="w-3.5 h-3.5" />
+          <span>{totalQuestions} questions</span>
+        </div>
+        <div className="ml-auto transition-transform group-hover:translate-x-1" style={{ color: mod.color }}>
+          <ArrowRight className="w-4 h-4" />
         </div>
       </div>
     </Link>
@@ -71,9 +66,9 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Welcome banner */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ marginBottom: 4, fontSize: '1.8rem' }}>Welcome back 👋</h1>
-        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back 👋</h1>
+        <p className="text-slate-600 m-0">
           {completedTopics === 0
             ? "You haven't started yet. Pick a module below to begin."
             : `${completedTopics} of ${totalTopics} topics completed. Keep going!`}
@@ -81,60 +76,50 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid-3 animate-slide-up" style={{ marginBottom: 32 }}>
-        <div className="glass-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall Progress</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <ProgressBar variant="circular" pct={overallPct} color="var(--accent-primary)" size={64} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up mb-8">
+        <div className="glass-card p-5">
+          <div className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Overall Progress</div>
+          <div className="flex items-center gap-4">
+            <ProgressBar variant="circular" pct={overallPct} color="#f97316" size={64} />
             <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{completedTopics}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>of {totalTopics} topics</div>
+              <div className="text-2xl font-bold text-slate-900 leading-none mb-1">{completedTopics}</div>
+              <div className="text-sm font-medium text-slate-500">of {totalTopics} topics</div>
             </div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Questions Answered</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: '50%',
-              background: 'rgba(34,211,238,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <HelpCircle size={28} color="var(--accent-secondary)" />
+        <div className="glass-card p-5">
+          <div className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Questions Answered</div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center flex-shrink-0">
+              <HelpCircle className="w-7 h-7 text-cyan-600" />
             </div>
             <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{completedQuestions}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>of {allQuestions.length} total</div>
+              <div className="text-2xl font-bold text-slate-900 leading-none mb-1">{completedQuestions}</div>
+              <div className="text-sm font-medium text-slate-500">of {allQuestions.length} total</div>
             </div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px 24px' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Modules Active</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: '50%',
-              background: 'rgba(16,185,129,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <TrendingUp size={28} color="var(--color-success)" />
+        <div className="glass-card p-5">
+          <div className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Modules Active</div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-7 h-7 text-emerald-600" />
             </div>
             <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              <div className="text-2xl font-bold text-slate-900 leading-none mb-1">
                 {modules.filter(m => m.topics.some(t => state.topicProgress[t.id]?.completed)).length}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>of {modules.length} modules</div>
+              <div className="text-sm font-medium text-slate-500">of {modules.length} modules</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Module grid */}
-      <h2 style={{ marginBottom: 16, fontSize: '1.1rem' }}>Modules</h2>
-      <div className="grid-auto">
+      <h2 className="text-xl font-bold text-slate-900 mb-4">Modules</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {modules.map((mod, i) => (
           <ModuleCard key={mod.id} mod={mod} index={i} />
         ))}

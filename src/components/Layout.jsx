@@ -1,5 +1,4 @@
 import { Outlet, useLocation, useParams } from 'react-router-dom'
-import Sidebar from './Sidebar.jsx'
 import Header from './Header.jsx'
 import modules from '../data/modules.json'
 
@@ -32,21 +31,14 @@ function useBreadcrumb() {
   return crumbs
 }
 
-function LayoutContent() {
+export default function Layout() {
   const breadcrumb = useBreadcrumb()
   return (
-    <div className="app-shell bg-grid">
-      <Sidebar />
-      <div className="main-content">
-        <Header breadcrumb={breadcrumb} />
-        <main className="page-content">
-          <Outlet />
-        </main>
-      </div>
+    <div className="app-shell">
+      <Header breadcrumb={breadcrumb} />
+      <main className="page-content">
+        <Outlet />
+      </main>
     </div>
   )
-}
-
-export default function Layout() {
-  return <LayoutContent />
 }

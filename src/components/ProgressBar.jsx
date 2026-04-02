@@ -2,7 +2,7 @@
 // Usage: <ProgressBar pct={75} color="#6366f1" />
 // Usage: <ProgressBar variant="circular" pct={75} size={80} color="#6366f1" />
 
-export default function ProgressBar({ pct = 0, color = 'var(--accent-primary)', variant = 'linear', size = 72, strokeWidth = 6, label }) {
+export default function ProgressBar({ pct = 0, color = '#f97316', variant = 'linear', size = 72, strokeWidth = 6, label }) {
   const clampedPct = Math.min(100, Math.max(0, pct))
 
   if (variant === 'circular') {
@@ -11,14 +11,14 @@ export default function ProgressBar({ pct = 0, color = 'var(--accent-primary)', 
     const offset = circumference - (clampedPct / 100) * circumference
 
     return (
-      <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+      <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.08)"
+            stroke="#e2e8f0"
             strokeWidth={strokeWidth}
           />
           <circle
@@ -31,19 +31,14 @@ export default function ProgressBar({ pct = 0, color = 'var(--accent-primary)', 
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+            className="transition-all duration-700 ease-out"
           />
         </svg>
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          gap: 1
-        }}>
-          <span style={{ fontSize: size > 60 ? '1.1rem' : '0.75rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0">
+          <span className={`font-bold text-slate-900 leading-none ${size > 60 ? 'text-lg' : 'text-xs'}`}>
             {clampedPct}%
           </span>
-          {label && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', lineHeight: 1 }}>{label}</span>}
+          {label && <span className="text-[0.6rem] text-slate-500 leading-none">{label}</span>}
         </div>
       </div>
     )
@@ -52,14 +47,14 @@ export default function ProgressBar({ pct = 0, color = 'var(--accent-primary)', 
   return (
     <div>
       {label && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{label}</span>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>{clampedPct}%</span>
+        <div className="flex justify-between mb-1.5">
+          <span className="text-xs font-medium text-slate-500">{label}</span>
+          <span className="text-xs font-bold text-slate-900">{clampedPct}%</span>
         </div>
       )}
-      <div className="progress-bar-track">
+      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
         <div
-          className="progress-bar-fill"
+          className="h-full rounded-full transition-all duration-500 ease-out"
           style={{ width: `${clampedPct}%`, background: color }}
         />
       </div>

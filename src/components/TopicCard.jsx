@@ -1,58 +1,55 @@
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react'
-import ProgressBar from './ProgressBar.jsx'
 import ConfidenceRating from './ConfidenceRating.jsx'
 import { useTopicState } from '../context/AppContext.jsx'
 
-export default function TopicCard({ topic, moduleId, moduleColor, index }) {
+export default function TopicCard({ topic, moduleId, moduleColor, index, isLast }) {
   const { completed, confidence, toggle, setConfidence } = useTopicState(topic.id)
 
   return (
     <div
-      className="glass-card animate-slide-up"
+      className={`p-5 transition-colors duration-200 hover:bg-slate-50 animate-slide-up ${
+        !isLast ? 'border-b border-slate-100' : ''
+      }`}
       style={{
-        padding: '20px',
-        borderColor: completed ? 'rgba(16,185,129,0.25)' : undefined,
+        backgroundColor: completed ? 'rgba(16,185,129,0.02)' : undefined,
         animationDelay: `${index * 0.05}s`,
         opacity: 0,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div className="flex items-start gap-4">
         <button
           onClick={e => { e.preventDefault(); toggle() }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, marginTop: 2 }}
+          className="bg-transparent border-none p-0 cursor-pointer flex-shrink-0 mt-0.5 hover:scale-110 transition-transform"
         >
           {completed
-            ? <CheckCircle2 size={22} color="var(--color-success)" />
-            : <Circle size={22} color="var(--text-muted)" />
+            ? <CheckCircle2 size={24} className="text-emerald-500" />
+            : <Circle size={24} className="text-slate-300 hover:text-slate-400" />
           }
         </button>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           <Link
             to={`/module/${moduleId}/topic/${topic.id}`}
-            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}
+            className="flex items-center gap-2 mb-1.5 no-underline group"
           >
-            <h4 style={{
-              margin: 0, fontSize: '0.95rem',
-              color: completed ? 'var(--text-secondary)' : 'var(--text-primary)',
-              textDecoration: completed ? 'line-through' : 'none',
-              opacity: completed ? 0.8 : 1,
-            }}>
+            <h4 className={`m-0 text-base font-bold leading-tight transition-colors group-hover:text-orange-500
+              ${completed ? 'text-slate-500 line-through opacity-80' : 'text-slate-900'}
+            `}>
               {topic.title}
             </h4>
-            <ChevronRight size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+            <ChevronRight size={16} className="text-slate-400 flex-shrink-0 transition-transform group-hover:translate-x-1" />
           </Link>
-          <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+          <p className="m-0 mb-3 text-sm text-slate-500 leading-relaxed max-w-3xl">
             {topic.summary}
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 8, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
               <span style={{ color: moduleColor }}>
                 {topic.scenarios?.length || 0} scenarios
               </span>
-              <span>·</span>
+              <span className="opacity-50">·</span>
               <span>{topic.questions?.length || 0} questions</span>
             </div>
             <ConfidenceRating value={confidence} onChange={setConfidence} />
