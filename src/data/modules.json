@@ -1,0 +1,530 @@
+[
+  {
+    "id": "test-strategy",
+    "title": "Test Strategy & Architecture",
+    "subtitle": "The 'Senior' Mindset",
+    "icon": "🏛️",
+    "color": "#6366f1",
+    "gradient": "from-indigo-500 to-purple-600",
+    "topics": [
+      {
+        "id": "test-pyramid",
+        "title": "Modern Test Pyramid",
+        "summary": "Balancing Unit, Integration, and E2E tests in a microservices environment",
+        "theory": "The modern test pyramid goes beyond the basic Fowler model. In a microservices environment, the pyramid shifts:\n\n**Unit Tests (Base — ~60%)**: Fast, isolated, test single functions or classes. Mock all external dependencies. Target: < 1ms each.\n\n**Integration Tests (Middle — ~30%)**: Test component interactions — DB queries, HTTP clients, message consumers. Use real infra with Testcontainers.\n\n**E2E Tests (Top — ~10%)**: Full user journey validation against a staging environment. Keep these narrow and stable. Flaky E2E = cut it.\n\n**Contract Tests (Cross-cutting)**: Between layers — ensures microservice consumers and providers stay in sync (Pact).\n\n**Key Insight for Fintech**: In payment flows, integration tests carry more weight than usual because correctness (not just speed) is critical — a passing unit test on a mock is worth less than a contract test against the real payment gateway interface.",
+        "scenarios": [
+          {
+            "id": "s1",
+            "title": "Test Suite Audit",
+            "difficulty": "medium",
+            "description": "You join a team where a 3-hour test suite is blocking merges. 80% is E2E. What's your 90-day plan?",
+            "hints": ["Classify existing tests by type and identify duplicates", "Move stable E2E scenarios to contract tests", "Add Testcontainers-based integration layer", "Parallelize remaining E2E with Docker sharding"],
+            "answer": "1. Audit: Map all tests to pyramid layers. Find unit-level logic hiding in E2E.\n2. Refactor: Extract pure business logic → unit tests. Replace UI-verified API behavior → integration tests.\n3. Contract layer: Add Pact contracts for top 5 consumer-provider pairs.\n4. Parallelization: Shard remaining E2E across 4 Docker containers via CI matrix.\n5. Target: < 15-min total feedback loop."
+          },
+          {
+            "id": "s2",
+            "title": "New Microservice — Test Strategy",
+            "difficulty": "easy",
+            "description": "A new payment notification service is being built. Define a complete test strategy from scratch.",
+            "hints": ["Start with the risk profile", "Define what 'done' means for each layer", "Include non-functional requirements"],
+            "answer": "Risk areas: message delivery guarantees, idempotency, PII in notifications.\n\nStrategy:\n- Unit: Pure transformation logic (format, mask PII)\n- Integration: Kafka consumer tests (Testcontainers + embedded broker)\n- Contract: Pact test for the upstream payment service event schema\n- E2E: Single happy-path smoke test post-deploy\n- NFT: Soak test for memory leaks over 24h"
+          }
+        ],
+        "questions": [
+          {
+            "id": "q1",
+            "question": "What's the difference between a test pyramid and a test trophy?",
+            "answer": "The pyramid (Fowler) emphasizes a base of unit tests. The trophy (Kent C. Dodds) shifts weight to integration tests, arguing that integration tests give the best ROI — they test behavior users care about without the brittleness of E2E. For microservices, neither is dogma — the shape depends on your risk profile."
+          },
+          {
+            "id": "q2",
+            "question": "How do you decide what NOT to automate?",
+            "answer": "Skip automation when: (1) the feature changes too frequently — tests become maintenance burden, (2) exploratory/UX testing — human judgment is irreplaceable, (3) one-off validation — manual faster than the setup cost, (4) tests that would need to be rewritten with every UI refactor."
+          },
+          {
+            "id": "q3",
+            "question": "What does 'testing in production' mean and when is it appropriate?",
+            "answer": "TiP includes: canary releases (gradual rollout to % of users), feature flags (kill switch), synthetic monitoring (scripted probes in prod), chaos engineering. Appropriate when: staging doesn't reflect prod load, user behavior can't be simulated, you have solid observability and rollback mechanisms."
+          }
+        ],
+        "links": [
+          { "title": "Martin Fowler — Test Pyramid", "url": "https://martinfowler.com/bliki/TestPyramid.html", "platform": "blog" },
+          { "title": "Kent C. Dodds — Testing Trophy", "url": "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications", "platform": "blog" }
+        ]
+      },
+      {
+        "id": "shift-left-right",
+        "title": "Shift-Left & Shift-Right",
+        "summary": "Early bug detection through TDD/BDD and production testing techniques",
+        "theory": "**Shift-Left**: Move testing earlier in the SDLC.\n- Requirements grooming: SDET joins sprint planning to find testability issues before a line is coded\n- TDD: Red → Green → Refactor cycle. Drives minimal, testable code\n- BDD: Gherkin scenarios written with PO, Dev, QA — shared understanding before coding\n- Static analysis: Linters, SAST tools in pre-commit hooks\n\n**Shift-Right**: Test and monitor in production.\n- Canary Analysis: Route 5% traffic to new version, compare error rates\n- Synthetic Monitoring: Run real user journey scripts against prod every 5 minutes (Datadog, New Relic)\n- Feature Flags: Deploy dark, enable per user segment, kill instantly if error rate spikes\n- Observability: Distributed tracing (Jaeger/Zipkin), structured logs, RED metrics (Rate, Errors, Duration)\n\n**Fintech application**: A payment flow failure at midnight on a canary can be caught before full rollout — this is shift-right preventing a P0 incident.",
+        "scenarios": [
+          {
+            "id": "s3",
+            "title": "BDD Story Refinement",
+            "difficulty": "easy",
+            "description": "A developer writes: 'As a user I want to transfer money.' You're in the refinement. What's missing?",
+            "hints": ["Think about edge cases", "What are the acceptance criteria?", "Consider failure scenarios"],
+            "answer": "Missing: amount limits (min/max), currency handling, insufficient funds path, duplicate transfer prevention (idempotency key), recipient validation, notification on success/failure. Write Gherkin scenarios for each failure path before the happy path."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q4",
+            "question": "How do you implement BDD without it becoming just 'tests written in English'?",
+            "answer": "Key discipline: scenarios describe behavior from user's perspective (not implementation). One scenario = one behavior. Step definitions stay thin — delegate to domain objects. Avoid 'And I click the submit button' — write 'When I submit the transfer'. Maintain a living documentation mindset, not a test execution mindset."
+          },
+          {
+            "id": "q5",
+            "question": "What is a canary release and how do you test it?",
+            "answer": "Route a small % of traffic (5-10%) to the new version. Automated canary analysis compares: error rate, latency p95/p99, business metrics (transactions/min). If deviation > threshold, auto-rollback. Tools: Spinnaker, Argo Rollouts, AWS CodeDeploy. You test it by defining baseline metrics and success criteria before deployment."
+          }
+        ],
+        "links": [
+          { "title": "BDD with Cucumber — Official Docs", "url": "https://cucumber.io/docs/bdd/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "test-data-management",
+        "title": "Test Data Management (TDM)",
+        "summary": "Strategies for creating, cleaning, and masking sensitive fintech PII data",
+        "theory": "TDM is one of the hardest problems in enterprise testing, especially in fintech.\n\n**Strategies:**\n\n1. **Data Masking / Anonymization**: Copy prod data, mask PII (names, tax IDs, account numbers) using deterministic masking (same input → same output, referential integrity preserved)\n\n2. **Synthetic Data Generation**: Tools like Faker, Mimesis, or custom factories generate realistic but fake data. Better for fintech because no real PII ever leaves prod.\n\n3. **Data-on-Demand API**: A dedicated service that provisions test users/accounts for a test run and tears them down after. Each test is fully isolated.\n\n4. **Shared Data Pools**: Pre-provisioned accounts in a known state (e.g., 'account with overdraft', 'KYC-verified user'). Risk: state contamination between tests.\n\n5. **Database per Test**: Testcontainers spins a fresh DB per test class. Slow but perfectly isolated.\n\n**Fintech constraints**: PCI DSS requires card data never appear in test environments. GDPR limits prod data copies. These regulations drive synthetic data adoption.",
+        "scenarios": [
+          {
+            "id": "s4",
+            "title": "PII in Test Logs",
+            "difficulty": "hard",
+            "description": "A security audit finds that test logs contain real customer account numbers from a prod data copy. You're the SDET lead. What do you do in the next 48 hours?",
+            "hints": ["Immediate containment first", "Then root cause", "Long-term prevention"],
+            "answer": "Hour 1-4: Rotate log access, revoke broad permissions, identify scope of exposure, notify security/compliance.\nHour 4-24: Audit all test environments for prod data, inventory all pipelines that pull from prod.\nHour 24-48: Replace prod snapshots with synthetic data, implement log scrubbing middleware, add PII detection to CI pipeline (e.g., git-secrets, truffleHog)."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q6",
+            "question": "What is deterministic masking and why does it matter?",
+            "answer": "Deterministic masking means the same input value always produces the same masked output. This preserves referential integrity — if user_id '12345' maps to masked '99999', every table that references '12345' gets '99999'. Without it, foreign key relationships break and joins become meaningless."
+          },
+          {
+            "id": "q7",
+            "question": "How do you test idempotency in a payment service?",
+            "answer": "Send the exact same request (with same idempotency key) twice in rapid succession. Assert: only one transaction created, second response returns same result as first (not an error), no duplicate debit. Also test: different idempotency key for same payload creates a new transaction. Use a combination of API tests and DB state assertions."
+          }
+        ],
+        "links": [
+          { "title": "OWASP — Data Masking Guide", "url": "https://owasp.org/www-project-developer-guide/", "platform": "docs" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "backend-microservices",
+    "title": "Backend & Microservices Testing",
+    "subtitle": "The Most Critical Technical Pillar",
+    "icon": "🌐",
+    "color": "#22d3ee",
+    "gradient": "from-cyan-500 to-blue-600",
+    "topics": [
+      {
+        "id": "api-testing",
+        "title": "API Testing Deep Dive",
+        "summary": "REST vs GraphQL, schema validation, JWT/OAuth header security",
+        "theory": "**REST Testing Checklist:**\n- Status codes: 200/201/204/400/401/403/404/409/422/500\n- Schema validation: JSON Schema, OpenAPI spec contract\n- Header security: Authorization (Bearer JWT), Content-Type, CORS headers\n- Idempotency: PUT/DELETE must be idempotent\n- Pagination: limit/offset or cursor-based consistency\n\n**GraphQL-specific testing:**\n- Query complexity/depth limits (prevent DoS via nested queries)\n- Authorization at field level, not just operation level\n- N+1 query detection\n- Schema introspection disabled in production\n- Error handling: GraphQL returns 200 even on errors — check `errors` field\n\n**JWT validation points:**\n- Algorithm: HS256 vs RS256 (asymmetric preferred in microservices)\n- Expiry (`exp` claim): test expired tokens return 401\n- Audience (`aud`): token meant for service A shouldn't work on service B\n- Signature: tampered token must be rejected\n- None algorithm attack: explicitly test `alg: none` is rejected",
+        "scenarios": [
+          {
+            "id": "s5",
+            "title": "API Security Test Plan",
+            "difficulty": "medium",
+            "description": "You're testing a new /transfer endpoint that moves money between accounts. List your complete test scenarios.",
+            "hints": ["Happy path first", "Authentication/Authorization", "Business logic edge cases", "Error handling"],
+            "answer": "Authentication: missing token (401), expired token (401), wrong audience (403)\nAuthorization: user A cannot transfer from user B's account (403)\nBusiness logic: insufficient funds (422), transfer to self (400), zero amount (400), negative amount (400), exceed daily limit (422)\nIdempotency: duplicate request with same idempotency key returns same response, no double debit\nSchema: missing required fields (400), extra fields ignored, wrong types (400)\nEdge cases: amount with 3+ decimal places, max Long overflow amount\nPerformance: response time < 500ms at p95"
+          }
+        ],
+        "questions": [
+          {
+            "id": "q8",
+            "question": "What's the difference between authentication and authorization tests?",
+            "answer": "Authentication tests verify identity: invalid/missing/expired token returns 401. Authorization tests verify permissions: valid token for wrong user/role returns 403. Both must be tested per endpoint. A common mistake is only testing the happy path auth and missing 'can user A access user B's resource' (IDOR vulnerability)."
+          },
+          {
+            "id": "q9",
+            "question": "How do you test a GraphQL API differently from REST?",
+            "answer": "Key differences: (1) Always POST, response always 200 — check `errors` field, not HTTP status. (2) Test field-level authorization separately from operation-level. (3) Test query depth limits — deeply nested query should be rejected. (4) Test N+1 via DataLoader — batch queries should be issued, not one per item. (5) Introspection should be disabled in prod — verify it returns 403."
+          }
+        ],
+        "links": [
+          { "title": "RestAssured — Java API Testing", "url": "https://rest-assured.io/", "platform": "docs" },
+          { "title": "OWASP API Security Top 10", "url": "https://owasp.org/www-project-api-security/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "contract-testing",
+        "title": "Contract Testing with Pact",
+        "summary": "Ensuring microservices don't break each other using consumer-driven contracts",
+        "theory": "**Consumer-Driven Contract Testing** ensures that when service A (consumer) calls service B (provider), both agree on the interface.\n\n**Pact workflow:**\n1. Consumer writes a Pact test defining expected request/response\n2. Pact generates a `.json` contract file\n3. Contract is published to Pact Broker\n4. Provider CI fetches and verifies contracts\n5. `can-i-deploy` gate: blocks deployment if contract is broken\n\n**vs Integration Testing:**\n- Integration tests need both services running simultaneously (slow, flaky)\n- Contract tests decouple the services — consumer and provider verify independently\n- Contracts catch breaking changes before they reach staging\n\n**What contracts cover:**\n- Request structure (path, method, headers, body)\n- Response structure (status, body schema)\n- NOT business logic (that's the provider's unit tests)\n\n**Pact states**: Provider states ('given a user with id 123 exists') allow the provider to set up preconditions before verifying each interaction.",
+        "scenarios": [
+          {
+            "id": "s6",
+            "title": "Contract Break in Production",
+            "difficulty": "hard",
+            "description": "The portfolio service (consumer) starts getting 500s after the pricing service (provider) deployed a breaking change. How do you prevent this from happening again?",
+            "hints": ["Introduce Pact", "CI gate", "Versioning strategy"],
+            "answer": "Immediate: rollback pricing service, hotfix.\nPrevention:\n1. Add Pact consumer test in portfolio service for the pricing API contract.\n2. Publish to Pact Broker on portfolio CI.\n3. Add provider verification step to pricing service CI — blocks merge if consumer contract fails.\n4. Add `can-i-deploy` check before pricing service production deployment.\n5. Define versioning policy: breaking changes require major version bump and parallel running period."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q10",
+            "question": "What is the difference between provider states and pact interactions?",
+            "answer": "An interaction is the request/response pair being verified. A provider state is a precondition the provider sets up before verifying an interaction — e.g., 'given user 123 exists'. Without states, the provider can't know what data to have in its DB to satisfy the interaction. States are defined in the consumer test and handled by the provider's state handler code."
+          },
+          {
+            "id": "q11",
+            "question": "When should you NOT use contract testing?",
+            "answer": "Skip Pact when: (1) services are in the same team/repo — overhead isn't worth it, use integration tests. (2) public external APIs you don't control — use recorded mocks instead. (3) event-driven schemas with complex transformation — event schema registries (Confluent, Apicurio) are better. (4) the team has no CI discipline — Pact only works if the pipeline gates are enforced."
+          }
+        ],
+        "links": [
+          { "title": "Pact Documentation", "url": "https://docs.pact.io/", "platform": "docs" },
+          { "title": "Pact Broker", "url": "https://docs.pact.io/pact_broker", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "message-queues",
+        "title": "Async Message Queue Testing",
+        "summary": "Testing Kafka/RabbitMQ flows — exactly-once delivery and consumer validation",
+        "theory": "**Challenges with async testing:**\n- No synchronous response to assert on\n- Race conditions between producer and consumer\n- Message ordering guarantees vary by broker\n\n**Testing patterns:**\n\n1. **Embedded broker**: Use Testcontainers Kafka module. Full broker in Docker, fast startup.\n2. **Polling assertion**: Produce message → poll consumer output (DB/downstream topic) until state changes or timeout. Use Awaitility.\n3. **Dead Letter Queue (DLQ) testing**: Publish malformed message → assert it lands in DLQ, not silently dropped.\n4. **Consumer offset testing**: Simulate consumer restart mid-batch → assert no messages lost, no duplicates.\n5. **Idempotent consumer**: Publish same message twice → assert downstream state changed only once.\n\n**Exactly-once semantics**: Kafka >= 0.11 supports transactional producers + idempotent consumers. Test by injecting duplicate events and asserting deduplication logic works.\n\n**Schema Registry**: Validate Avro/Protobuf schemas are backwards-compatible before deploying schema changes.",
+        "scenarios": [
+          {
+            "id": "s7",
+            "title": "Missing Message Investigation",
+            "difficulty": "medium",
+            "description": "Users report that some trades are not appearing in their portfolio after execution. The trade service publishes to Kafka. How do you diagnose and test for this?",
+            "hints": ["Where could messages be lost?", "How do you observe consumer lag?", "What's your test harness?"],
+            "answer": "Diagnosis: Check consumer group lag (kafka-consumer-groups.sh), check DLQ for failed deserialization, check schema compatibility.\n\nTest harness: Testcontainers Kafka + Awaitility. Publish a trade event → poll portfolio read model → assert within 5 seconds.\n\nEdge cases to test: malformed event (→ DLQ), duplicate event (idempotency), consumer restart mid-batch (offset commit), schema evolution (old producer + new consumer)."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q12",
+            "question": "How do you test a Kafka consumer without a real Kafka broker?",
+            "answer": "Options: (1) Testcontainers Kafka — real broker in Docker, best fidelity, slightly slower. (2) Embedded Kafka (Spring EmbeddedKafka, kafka-junit) — in-process, fast, no Docker needed. (3) Mock the consumer framework (KafkaListener) — fast but low fidelity, misses serialization/deserialization issues. Prefer Testcontainers for integration tests."
+          },
+          {
+            "id": "q13",
+            "question": "What is exactly-once delivery and how do you verify it?",
+            "answer": "Exactly-once = each message is processed exactly once even if the broker retries. Achieved via: idempotent producer (producer ID + sequence number dedup) + transactional writes + idempotent consumer logic. Test it: publish the same message with identical key twice → verify the downstream state (DB) shows only one record changed."
+          }
+        ],
+        "links": [
+          { "title": "Testcontainers Kafka Module", "url": "https://java.testcontainers.org/modules/kafka/", "platform": "docs" },
+          { "title": "Confluent Kafka Testing Guide", "url": "https://developer.confluent.io/", "platform": "docs" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "automation-engineering",
+    "title": "Automation Engineering",
+    "subtitle": "Frameworks, Not Scripts — Live Coding Prep",
+    "icon": "⚙️",
+    "color": "#10b981",
+    "gradient": "from-emerald-500 to-teal-600",
+    "topics": [
+      {
+        "id": "design-patterns",
+        "title": "Design Patterns for Automation",
+        "summary": "POM, Screenplay Pattern, Singleton, Factory — building maintainable frameworks",
+        "theory": "**Page Object Model (POM):**\n- Each page/component = a class encapsulating locators and actions\n- Tests read in domain language: `loginPage.loginAs('user', 'pass')`\n- Locator changes require 1 file change, not 50\n- Anti-pattern: POM methods with assertions — keep pages as 'what you can do', not 'what you expect'\n\n**Screenplay Pattern (SERENITY):**\n- Actors have Abilities (can BrowseTheWeb, can CallAnApi)\n- Tasks are reusable actions (PlaceOrder, LoginAs)\n- Questions extract state for assertions\n- Better than POM at scale — composable, no god-class pages\n\n**Singleton for WebDriver:**\n```java\npublic class DriverManager {\n  private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();\n  public static WebDriver getDriver() { return driver.get(); }\n  public static void setDriver(WebDriver d) { driver.set(d); }\n}\n```\nThreadLocal ensures parallel tests each have their own driver instance.\n\n**Factory for multi-browser/mobile:**\n```java\npublic class DriverFactory {\n  public static WebDriver create(String type) {\n    return switch(type) {\n      case 'chrome' -> new ChromeDriver();\n      case 'firefox' -> new FirefoxDriver();\n      case 'mobile' -> new AppiumDriver(...);\n    };\n  }\n}\n```",
+        "scenarios": [
+          {
+            "id": "s8",
+            "title": "Framework Review",
+            "difficulty": "medium",
+            "description": "You review a test suite where every test class has `driver.findElement(By.id('submit')).click()` duplicated 50 times. How do you refactor this?",
+            "hints": ["Apply POM", "Centralize locators", "Add BasePage abstraction"],
+            "answer": "1. Create BasePage with protected WebDriver driver and common wait utilities.\n2. Create SubmitButton component or include in relevant Page Object.\n3. Replace all direct findElement calls with page object method calls.\n4. Use @FindBy annotations with PageFactory for declarative locator management.\n5. Add explicit waits in BasePage.click() to replace brittle direct clicks.\nResult: locator changes in 1 place, tests read as user journeys."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q14",
+            "question": "What's the main problem with the Page Object Model at scale?",
+            "answer": "POM leads to 'god page objects' — monolithic classes with hundreds of methods. Pages grow to represent the whole application, not just a page. The Screenplay pattern solves this via composition: small, focused Tasks instead of large Page methods. Another POM problem: test data embedded in page objects — should be separated."
+          },
+          {
+            "id": "q15",
+            "question": "Why use ThreadLocal for WebDriver in parallel tests?",
+            "answer": "WebDriver is not thread-safe. If tests run in parallel threads sharing one static WebDriver instance, threads will interfere with each other's browser sessions (clicks landing on wrong page, NPEs). ThreadLocal gives each thread its own driver instance while keeping a single access point. Must call ThreadLocal.remove() in teardown to prevent memory leaks."
+          }
+        ],
+        "links": [
+          { "title": "Serenity BDD — Screenplay Pattern", "url": "https://serenity-bdd.info/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "solid-clean-code",
+        "title": "SOLID Principles in Test Code",
+        "summary": "Applying SOLID to test automation for maintainability",
+        "theory": "**S — Single Responsibility**: Each test class tests one feature. Each page object represents one page/component. Don't mix API and UI logic in one helper.\n\n**O — Open/Closed**: Test data factories use inheritance/composition to add new types without modifying existing ones. New test environments added by extending DriverFactory, not modifying it.\n\n**L — Liskov Substitution**: If `MobilePage extends BasePage`, using MobilePage should work wherever BasePage is expected. Base class contracts must be honoured.\n\n**I — Interface Segregation**: Don't force test helpers to implement methods they don't need. Split a fat `TestHelper` interface into `ApiHelper`, `DatabaseHelper`, `UIHelper`.\n\n**D — Dependency Inversion**: Test classes depend on abstractions (interfaces), not concrete implementations. `OrderService` test depends on `IOrderRepository`, not a concrete DB class — allows easy mocking.\n\n**Practical checklist for code review:**\n- Can I test this class without any external dependencies? (DI)\n- Is this the only reason this class would change? (SRP)\n- Will adding a new browser type break existing browser tests? (OCP)",
+        "scenarios": [
+          {
+            "id": "s9",
+            "title": "SOLID Violation Identification",
+            "difficulty": "easy",
+            "description": "A test helper class has: setupDatabase(), launchBrowser(), sendEmail(), generateReport(), cleanupFiles(). Which SOLID principle is violated?",
+            "hints": ["Count responsibilities", "What changes would force this class to change?"],
+            "answer": "SRP: 5 different responsibilities in one class. It would change if DB schema changes, browser changes, email system changes, report format changes, or file system changes. Split into: DatabaseHelper, BrowserHelper, NotificationHelper, ReportGenerator, FileCleanup."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q16",
+            "question": "Give a real example of the Open/Closed principle in a test framework.",
+            "answer": "A test data builder using the Builder pattern. The base `UserBuilder` creates standard users. You add `PremiumUserBuilder extends UserBuilder` without touching UserBuilder. Tests that need premium users use the new builder — existing tests are unaffected. OCP: open for extension (new builder types), closed for modification (UserBuilder unchanged)."
+          }
+        ],
+        "links": [
+          { "title": "Refactoring Guru — SOLID", "url": "https://refactoring.guru/solid", "platform": "blog" }
+        ]
+      },
+      {
+        "id": "live-coding-prep",
+        "title": "Live Coding Preparation",
+        "summary": "String manipulation, HashMaps, Array sorting — interview-ready patterns",
+        "theory": "**Common SDET live coding topics:**\n\n**String manipulation:**\n```java\n// Reverse words in string\nString reverseWords(String s) {\n  return Arrays.stream(s.trim().split('\\\\s+'))\n    .map(w -> new StringBuilder(w).reverse())\n    .collect(Collectors.joining(' '));\n}\n```\n\n**HashMap patterns:**\n```java\n// Find duplicate characters\nMap<Character, Integer> freq = new HashMap<>();\nfor (char c : str.toCharArray()) {\n  freq.merge(c, 1, Integer::sum);\n}\nfreq.entrySet().stream()\n  .filter(e -> e.getValue() > 1)\n  .forEach(...);\n```\n\n**Array sorting for test data:**\n```java\n// Sort by multiple fields (test results)\ntestResults.sort(Comparator.comparing(TestResult::getStatus)\n  .thenComparing(TestResult::getDuration));\n```\n\n**SDET-specific: Parse test log**\n```python\nimport re\ndef parse_failures(log: str) -> list[str]:\n  return re.findall(r'FAILED: (.+)', log)\n```\n\n**Live coding tips:**\n- Think out loud — interviewer wants to see problem-solving process\n- Start with brute force, then optimize\n- Handle nulls and edge cases explicitly\n- Write a helper test first to validate your solution\n- Name variables clearly — readability > cleverness",
+        "scenarios": [
+          {
+            "id": "s10",
+            "title": "Live Coding: Anagram Check",
+            "difficulty": "easy",
+            "description": "Write a function to check if two strings are anagrams. Then write a test for it. Think out loud.",
+            "hints": ["Normalize case and spaces first", "Two approaches: sort or frequency map", "Cover edge cases in your test"],
+            "answer": "```java\nboolean isAnagram(String a, String b) {\n  if (a == null || b == null) return false;\n  char[] ca = a.toLowerCase().replaceAll('\\\\s', '').toCharArray();\n  char[] cb = b.toLowerCase().replaceAll('\\\\s', '').toCharArray();\n  Arrays.sort(ca); Arrays.sort(cb);\n  return Arrays.equals(ca, cb);\n}\n\n// Test\n@Test void anagramTest() {\n  assertTrue(isAnagram('listen', 'silent'));\n  assertTrue(isAnagram('Astronomer', 'Moon starer'));\n  assertFalse(isAnagram('hello', 'world'));\n  assertFalse(isAnagram(null, 'test'));\n  assertTrue(isAnagram('', ''));\n}\n```"
+          }
+        ],
+        "questions": [
+          {
+            "id": "q17",
+            "question": "How do you handle a null input in a live coding interview?",
+            "answer": "Address it explicitly: 'I'm going to add a null guard at the top — in production code this would throw IllegalArgumentException with a descriptive message, or return Optional.empty() depending on the API contract.' Always clarify the null contract with the interviewer before coding. Shows engineering judgment, not just syntax knowledge."
+          },
+          {
+            "id": "q18",
+            "question": "What data structure would you use to find duplicate test IDs in a large test suite result file?",
+            "answer": "HashSet: O(1) contains check. Iterate through test IDs — add to seen set, if already present, add to duplicates set. O(n) time, O(n) space. If memory is a constraint and IDs are sortable, sort array then linear scan for adjacent duplicates — O(n log n) time, O(1) extra space."
+          }
+        ],
+        "links": [
+          { "title": "LeetCode — Top Interview Questions", "url": "https://leetcode.com/explore/interview/card/top-interview-questions-easy/", "platform": "leetcode" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "non-functional-testing",
+    "title": "Non-Functional Testing",
+    "subtitle": "The SDET II Edge — Systems That Don't Crash",
+    "icon": "⚡",
+    "color": "#f59e0b",
+    "gradient": "from-amber-500 to-orange-600",
+    "topics": [
+      {
+        "id": "performance-engineering",
+        "title": "Performance Engineering",
+        "summary": "k6, JMeter, Gatling — Load, Stress, Spike, and Soak testing",
+        "theory": "**Key Metrics:**\n- **Throughput (RPS/TPS)**: Requests or transactions per second — capacity measure\n- **Latency p95/p99**: 95th/99th percentile response time — tail latency affects user experience\n- **Error Rate**: % of requests failing — should be < 0.1% under normal load\n- **Apdex Score**: Satisfaction score based on response time thresholds\n\n**Test Types:**\n1. **Load Test**: Simulate expected production load over time. Goal: verify SLAs are met.\n2. **Stress Test**: Increase load until system breaks. Goal: find breaking point and failure mode.\n3. **Spike Test**: Sudden 10x traffic increase (market open). Goal: verify auto-scaling or graceful degradation.\n4. **Soak Test**: Sustained load for 24-72 hours. Goal: find memory leaks, connection pool exhaustion.\n\n**k6 example:**\n```javascript\nimport http from 'k6/http';\nimport { check, sleep } from 'k6';\nexport const options = {\n  stages: [\n    { duration: '2m', target: 100 },\n    { duration: '5m', target: 100 },\n    { duration: '2m', target: 0 },\n  ],\n  thresholds: {\n    http_req_duration: ['p(95)<500'],\n    http_req_failed: ['rate<0.01'],\n  },\n};\n```\n\n**Fintech context**: During market opening (9:30 AM), stock trading platforms see 50x normal traffic spikes. Spike tests with auto-scaling validation are critical.",
+        "scenarios": [
+          {
+            "id": "s11",
+            "title": "Performance Regression Found",
+            "difficulty": "hard",
+            "description": "After a deploy, p99 latency on the order placement API jumped from 200ms to 2000ms under load. How do you investigate?",
+            "hints": ["Correlate with code changes", "Check database query plans", "Look for N+1 queries", "Check connection pool settings"],
+            "answer": "1. Compare k6 baseline vs current run — isolate the exact endpoint.\n2. Enable slow query logging in DB — look for queries > 100ms.\n3. Check APM traces (Jaeger/Datadog) for the slowest request — find which span is hot.\n4. Review the diff: new feature likely introduced N+1 query or missing index.\n5. Fix: add DB index or add batch fetch.\n6. Add performance regression test to CI: if p95 > 500ms, fail the build.\n7. Set up continuous performance testing (k6 cloud) — catch regressions before prod."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q19",
+            "question": "Why do you care about p99 latency more than average latency?",
+            "answer": "Average hides tail latency. If 99% of requests take 100ms and 1% take 10 seconds, the average looks fine but 1 in 100 users is having a terrible experience. In fintech, that 1% could be your highest-value trade. Always report p95 and p99. Outliers often indicate resource contention, GC pauses, lock waits, or cache misses."
+          },
+          {
+            "id": "q20",
+            "question": "What is the difference between load testing and stress testing?",
+            "answer": "Load testing: simulate expected production traffic to verify SLAs are met. You know the target load. Stress testing: push beyond expected limits to find the breaking point and observe failure behavior. Key question for stress: does the system fail gracefully (shed load, return 503) or catastrophically (data corruption, cascading failures)?"
+          }
+        ],
+        "links": [
+          { "title": "k6 Documentation", "url": "https://k6.io/docs/", "platform": "docs" },
+          { "title": "Gatling Documentation", "url": "https://gatling.io/docs/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "chaos-engineering",
+        "title": "Chaos Engineering",
+        "summary": "Breaking systems intentionally to build resilience",
+        "theory": "**Chaos Engineering Principles (Netflix):**\n1. Define 'steady state' — a measurable normal baseline (RPS, error rate, p99)\n2. Hypothesize: 'If we kill pod X, steady state will be maintained'\n3. Inject failure in production (or prod-like environment)\n4. Look for deviation from steady state\n5. Minimize blast radius — start small, abort if deviation detected\n\n**Common experiments:**\n- **Pod kill**: `kubectl delete pod <name>` — tests Kubernetes self-healing\n- **Network latency**: Add 500ms latency between services — tests timeout handling\n- **Memory pressure**: Fill memory to 90% — tests GC behavior and OOM handling\n- **Disk full**: Fill disk — tests graceful degradation and logging failures\n- **Dependency down**: Kill downstream service — tests circuit breakers\n\n**Tools:**\n- **Chaos Monkey** (Netflix): Randomly kills EC2 instances\n- **Litmus** (CNCF): Kubernetes-native chaos experiments\n- **AWS Fault Injection Simulator**: Managed chaos for AWS services\n- **Steadybit**: Modern chaos platform with SLO guards\n\n**Circuit Breaker testing**: Inject failures into downstream service → verify circuit opens after threshold → verify fallback response → verify circuit closes after recovery.",
+        "scenarios": [
+          {
+            "id": "s12",
+            "title": "Design a Chaos Experiment",
+            "difficulty": "hard",
+            "description": "Design a chaos experiment to test the resilience of the portfolio service when the market data service is slow.",
+            "hints": ["Define hypothesis", "Define steady state metrics", "Minimal blast radius", "Abort conditions"],
+            "answer": "Hypothesis: 'When market data service latency is 2s, portfolio API still responds within 500ms with cached/stale data.'\n\nSteady state: portfolio API p95 < 200ms, error rate < 0.1%\n\nExperiment: Using Toxiproxy, add 2000ms latency to network calls to market data service. Apply to 10% of traffic only.\n\nMonitor: Grafana dashboard, portfolio API latency + error rate.\n\nAbort condition: error rate > 1% or p99 > 1000ms.\n\nExpected: circuit breaker opens, portfolio returns cached prices with 'stale data' indicator.\n\nLearning: if experiment fails (error rate spikes), circuit breaker timeout is misconfigured."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q21",
+            "question": "What is a circuit breaker and how do you test it?",
+            "answer": "Circuit breaker (Hystrix/Resilience4j) monitors calls to a downstream service. After N failures in a window, it 'opens' — subsequent calls immediately return a fallback without calling the downstream service. After a timeout, it 'half-opens' to test if service recovered.\n\nTest it: Mock downstream to return 500s until threshold → assert circuit opens → assert fallback returned → advance time past recovery timeout → assert circuit half-opens → mock downstream returns 200 → assert circuit closes."
+          },
+          {
+            "id": "q22",
+            "question": "Why should you run chaos experiments in production rather than staging?",
+            "answer": "Staging doesn't replicate production behavior: traffic patterns differ, data volumes differ, auto-scaling thresholds behave differently, third-party integrations may be stubs. Real resilience can only be validated under real conditions. Mitigate risk via: feature flags, small blast radius (1-5% of traffic), real-time abort conditions, off-peak timing, and on-call engineer present."
+          }
+        ],
+        "links": [
+          { "title": "Principles of Chaos Engineering", "url": "https://principlesofchaos.org/", "platform": "blog" },
+          { "title": "Chaos Toolkit", "url": "https://chaostoolkit.org/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "security-testing",
+        "title": "Basic Security Testing (AppSec)",
+        "summary": "OWASP Top 10 basics — SQL Injection and Broken Access Control in APIs",
+        "theory": "**OWASP API Security Top 10 (2023):**\n\n1. **Broken Object Level Authorization (BOLA/IDOR)**: User A accesses User B's data by changing an ID in the URL. Most common API vulnerability.\n   - Test: Request `/users/1/transactions` while authenticated as user 2. Expect 403.\n\n2. **Broken Authentication**: Weak tokens, no expiry, no rate limiting on login.\n   - Test: Brute force login endpoint — should be rate limited (429 after 5 attempts).\n\n3. **Broken Object Property Level Authorization**: User can update fields they shouldn't (e.g., setting their own `role` to `admin`).\n   - Test: PUT /users/me with `{\"role\": \"admin\"}` — should be ignored.\n\n4. **Injection (SQLi, NoSQLi)**: Unsanitized input in queries.\n   - Test: Input `'; DROP TABLE users; --` in every string field.\n\n5. **Security Misconfiguration**: Stack traces in error responses, debug endpoints in prod, wide CORS.\n   - Test: Trigger a 500 error — response should not contain stack trace.\n\n**As an SDET**: Your role is 'OWASP Top 10 + business logic security'. Not full penetration testing. Focus on: IDOR, auth bypass, mass assignment, information disclosure in errors.",
+        "scenarios": [
+          {
+            "id": "s13",
+            "title": "Security Test Plan for New Endpoint",
+            "difficulty": "medium",
+            "description": "A new GET /accounts/{accountId}/statements endpoint is being released. Write your security test cases.",
+            "hints": ["IDOR", "Authentication", "Authorization by role", "Information disclosure"],
+            "answer": "1. IDOR: Authenticated as user A, request accountId belonging to user B → expect 403\n2. No auth: Request without token → expect 401\n3. Expired token: Request with expired JWT → expect 401\n4. Tampered token: Modify payload to change userId → expect 401 (signature invalid)\n5. Admin token: Verify admin role can access any account (if intended)\n6. Error response: Request non-existent accountId → expect 404 with generic message, no stack trace\n7. SQL injection: accountId = `1 OR 1=1` → expect 400 or 404, not data leak\n8. Large range: Statement date range spanning 10 years → expect pagination or 400"
+          }
+        ],
+        "questions": [
+          {
+            "id": "q23",
+            "question": "What is the difference between authentication and authorization vulnerabilities?",
+            "answer": "Authentication: Can you prove you are who you say you are? Vulnerabilities: weak passwords, no MFA, JWT algorithm confusion, no brute force protection. Authorization: Given you are authenticated, what are you allowed to do? Vulnerabilities: IDOR (access other users' data), privilege escalation (user becomes admin), mass assignment (update fields you shouldn't)."
+          },
+          {
+            "id": "q24",
+            "question": "How do you include security tests in a CI/CD pipeline without slowing it down?",
+            "answer": "Tiered approach: (1) SAST (static analysis — Semgrep, SonarQube) in every PR — fast, < 2 min. (2) Dependency scanning (OWASP Dependency-Check, Snyk) in nightly build. (3) DAST (OWASP ZAP baseline scan) post-deploy to staging — lightweight, < 5 min. (4) Full penetration test quarterly by security team. Don't run DAST on every PR — too slow and too noisy."
+          }
+        ],
+        "links": [
+          { "title": "OWASP API Security Top 10", "url": "https://owasp.org/www-project-api-security/", "platform": "docs" },
+          { "title": "OWASP ZAP", "url": "https://www.zaproxy.org/", "platform": "docs" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "devops-infrastructure",
+    "title": "Infrastructure & DevOps Integration",
+    "subtitle": "Owning the Quality Gate in CI/CD",
+    "icon": "🏗️",
+    "color": "#a855f7",
+    "gradient": "from-purple-500 to-pink-600",
+    "topics": [
+      {
+        "id": "cicd-pipelines",
+        "title": "CI/CD Pipeline Design",
+        "summary": "GitHub Actions and GitLab CI — quality gates and test orchestration",
+        "theory": "**SDET's role in CI/CD**: Own the quality gate — define what must pass before code reaches production.\n\n**Quality Gate tiers:**\n1. **Pre-commit** (< 30s): Linting, static analysis, unit tests\n2. **PR Pipeline** (< 10min): Unit + integration tests, SAST, coverage gate\n3. **Post-merge / Staging** (< 30min): Full E2E suite, performance smoke, DAST\n4. **Pre-prod** (< 60min): Full regression, load test, canary analysis\n\n**GitHub Actions example:**\n```yaml\nname: Quality Gate\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    services:\n      postgres:\n        image: postgres:15\n        env:\n          POSTGRES_PASSWORD: test\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-java@v4\n        with: { java-version: '21' }\n      - run: ./gradlew test integrationTest\n      - uses: codecov/codecov-action@v4\n      - run: ./gradlew jacocoCheck  # fails if < 80% coverage\n```\n\n**Fail fast principle**: Put fastest tests first. If unit tests fail, don't waste time running E2E.\n\n**Test reporting**: Publish JUnit XML reports for PR annotations — broken tests show inline in the diff.",
+        "scenarios": [
+          {
+            "id": "s14",
+            "title": "Slow Pipeline Optimization",
+            "difficulty": "medium",
+            "description": "Your PR pipeline takes 45 minutes. Developers are bypassing it. What's your optimization strategy?",
+            "hints": ["Profile which jobs are slowest", "Identify parallelization opportunities", "Caching strategies", "Test selection"],
+            "answer": "1. Profile: Add timestamps to each step — find the 2-3 jobs taking > 10min each.\n2. Parallelization: Split test suite by module into matrix jobs (4 parallel runners).\n3. Caching: Cache Maven/Gradle dependencies between runs (saves 3-5 min).\n4. Test selection: Run only tests affected by changed files (Gradle test filtering, Jest --changed).\n5. Separate concerns: Move E2E to post-merge, keep PR pipeline to unit + integration only.\n6. Target: < 10min for PR pipeline. Enforce via org policy — not optional."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q25",
+            "question": "What is a quality gate and what metrics should it enforce?",
+            "answer": "A quality gate is a pass/fail threshold that must be met before code progresses in the pipeline. Typical metrics: (1) unit test pass rate = 100%, (2) code coverage >= 80%, (3) no new critical/blocker SonarQube issues, (4) no high/critical CVEs in dependencies, (5) integration tests pass rate = 100%, (6) API contract tests pass (can-i-deploy). If any threshold is breached, the PR is blocked."
+          },
+          {
+            "id": "q26",
+            "question": "How do you handle flaky tests in a CI/CD pipeline?",
+            "answer": "Short term: Mark as quarantined — run separately, don't block pipeline. Track in a flaky test dashboard. Medium term: Investigate root cause — usually async timing, shared state, or external dependency. Fix or delete. Long term: Add flaky test detection (retry count > 0 = flaky), alert on flakiness rate > 2%. Policy: flaky tests must be fixed within 1 sprint or deleted."
+          }
+        ],
+        "links": [
+          { "title": "GitHub Actions — Official Docs", "url": "https://docs.github.com/en/actions", "platform": "docs" },
+          { "title": "GitLab CI/CD Documentation", "url": "https://docs.gitlab.com/ee/ci/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "parallelization-sharding",
+        "title": "Parallelization & Test Sharding",
+        "summary": "Reducing 2-hour test suites to 10 minutes with Docker and CI matrices",
+        "theory": "**Parallelization strategies:**\n\n1. **Thread-level parallelism**: JUnit 5 parallel execution, pytest-xdist workers. Limited by CPU cores on one machine.\n\n2. **Test sharding**: Split test suite by N shards, run each on separate CI runner. GitHub Actions matrix.\n   ```yaml\n   strategy:\n     matrix:\n       shard: [1, 2, 3, 4]\n   steps:\n     - run: pytest --shard-id=${{ matrix.shard }} --num-shards=4\n   ```\n\n3. **Distributed browser testing**: Selenium Grid or Playwright parallel workers across multiple nodes.\n\n4. **Testcontainers parallelism**: Each test class gets its own container — `@Testcontainers` + `@Container` as instance field (not static).\n\n**Load balancing tests**: Naive sharding (by count) can create uneven shards if some tests are 10x slower. Optimal: shard by historical duration using test analytics (Buildkite Test Analytics, Playwright sharding with timing data).\n\n**Docker + CI matrix math**: 4 runners × 5 min each = 20 test-minutes in 5 clock-minutes. A 2-hour suite sharded 16 ways = ~8 minutes.",
+        "scenarios": [
+          {
+            "id": "s15",
+            "title": "Design a Parallel Test Architecture",
+            "difficulty": "medium",
+            "description": "You have 1000 Playwright E2E tests taking 120 minutes sequentially. Target: < 15 minutes. Design the architecture.",
+            "hints": ["CI matrix", "Test sharding", "Resource considerations", "Reporting consolidation"],
+            "answer": "1. Shard 1000 tests into 16 groups by file path hash (balanced sharding).\n2. GitHub Actions matrix: 16 parallel jobs, each running ~62 tests on ubuntu-latest.\n3. Each job spins its own test environment via Docker Compose (API + DB).\n4. Results: each job outputs JUnit XML.\n5. After matrix completes: consolidation job merges all XML reports, fails if any shard had failures.\n6. Estimated time: 120min / 16 = 7.5min per shard + ~2min overhead = ~10min total.\n7. Cost: 16 runners × 10min = 160 runner-minutes per run. Evaluate cost vs developer time saved."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q27",
+            "question": "What are the risks of parallel test execution and how do you mitigate them?",
+            "answer": "Risks: (1) Shared state — tests modify shared DB records, interfere with each other. Mitigation: unique test data per test (UUID-based IDs), or separate DB per shard. (2) Port conflicts — multiple browser instances on same port. Mitigation: dynamic port allocation. (3) Non-deterministic order — tests that accidentally depend on execution order. Mitigation: randomize execution order in CI and fix failures. (4) Resource exhaustion — 16 parallel Docker containers OOM. Mitigation: right-size runners, use container resource limits."
+          }
+        ],
+        "links": [
+          { "title": "Playwright — Sharding", "url": "https://playwright.dev/docs/test-sharding", "platform": "docs" },
+          { "title": "pytest-xdist Documentation", "url": "https://pytest-xdist.readthedocs.io/", "platform": "docs" }
+        ]
+      },
+      {
+        "id": "observability",
+        "title": "Observability & Monitoring",
+        "summary": "Grafana, Prometheus, Datadog — monitoring test environments and catching flaky tests",
+        "theory": "**Three pillars of observability:**\n1. **Metrics**: Quantitative measurements over time (Prometheus + Grafana). Key metrics for SDET: test pass rate, flakiness rate, test execution time trend, environment uptime.\n2. **Logs**: Structured log streams (ELK, Loki). SDET focus: structured JSON logs with correlation IDs for tracing failures across microservices.\n3. **Traces**: Distributed traces across service boundaries (Jaeger, Zipkin, Datadog APM). SDET use: correlate test failure with the exact DB query or external call that was slow.\n\n**RED metrics for test environments:**\n- Rate: Test runs per hour\n- Errors: Failed test % per run\n- Duration: Mean/p95 test execution time\n\n**Flaky test detection via observability:**\n- Export test results to metrics: `test_result{name='LoginTest', status='failed'} 1`\n- Grafana dashboard: tests that flip pass/fail without code changes = flaky\n- Alert: if same test fails > 3 times in 10 runs = auto-quarantine\n\n**AI in Testing:**\n- Copilot/ChatGPT for boilerplate: test scaffolding, data factories, locator suggestions\n- Synthetic test data generation: prompt for realistic fintech transaction data\n- Test case generation from OpenAPI specs\n- Caution: AI-generated tests need human review — they optimize for coverage, not risk coverage",
+        "scenarios": [
+          {
+            "id": "s16",
+            "title": "Build an Observability Dashboard",
+            "difficulty": "easy",
+            "description": "You want to give stakeholders visibility into test quality trends. What metrics go on the dashboard?",
+            "hints": ["Lead vs lag indicators", "Actionable metrics", "Trend over time"],
+            "answer": "Dashboard panels:\n1. Overall test pass rate (week-over-week trend)\n2. Flaky test count (quarantined vs active)\n3. Test suite duration trend (is it growing?)\n4. Test coverage % (per module)\n5. Failed tests by module (hot spots)\n6. Environment uptime % (is staging reliable?)\n7. Mean time to detect (MTTD) — how long from deploy to test failure discovered\n8. P95 API response time in test environment vs production (regression indicator)"
+          }
+        ],
+        "questions": [
+          {
+            "id": "q28",
+            "question": "How do you use distributed tracing to debug a test failure in a microservices environment?",
+            "answer": "When a test fails on an API call, capture the `X-Trace-Id` (or correlation ID) from the response header. Open Jaeger/Datadog and search by trace ID. The trace shows: all services involved in the request, duration of each span, errors at each service boundary. You can pinpoint whether the failure was in the API gateway, the business service, or the DB layer — without reading logs across 10 services."
+          },
+          {
+            "id": "q29",
+            "question": "What is MTTD (Mean Time to Detect) and why does it matter to an SDET?",
+            "answer": "MTTD is the average time between a bug being introduced (or a production incident starting) and the team detecting it. SDET responsibility: minimize MTTD through better test coverage, faster pipelines, and production monitoring. A bug caught in pre-commit (< 5 min MTTD) costs orders of magnitude less to fix than one caught by a customer. Track MTTD as a quality metric — it measures how effective your entire testing strategy is."
+          }
+        ],
+        "links": [
+          { "title": "Grafana Documentation", "url": "https://grafana.com/docs/", "platform": "docs" },
+          { "title": "Prometheus Documentation", "url": "https://prometheus.io/docs/introduction/overview/", "platform": "docs" }
+        ]
+      }
+    ]
+  }
+]

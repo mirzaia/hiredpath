@@ -1,0 +1,51 @@
+[
+  {
+    "category": "Courses & Learning",
+    "icon": "🎓",
+    "resources": [
+      { "title": "Test Automation University", "description": "Free courses on Selenium, Appium, API testing, and frameworks", "url": "https://testautomationu.applitools.com/", "platform": "course" },
+      { "title": "Udemy — Selenium WebDriver with Java", "description": "In-depth Selenium framework design with POM and TestNG", "url": "https://www.udemy.com/topic/selenium-webdriver/", "platform": "course" },
+      { "title": "Playwright — Official Learning Path", "description": "Official end-to-end testing with Playwright for TypeScript/Python", "url": "https://playwright.dev/docs/intro", "platform": "docs" },
+      { "title": "k6 School", "description": "Performance testing fundamentals with k6 from the creators", "url": "https://k6.io/docs/", "platform": "docs" }
+    ]
+  },
+  {
+    "category": "Official Documentation",
+    "icon": "📖",
+    "resources": [
+      { "title": "Pact Documentation", "description": "Consumer-driven contract testing — full reference and tutorials", "url": "https://docs.pact.io/", "platform": "docs" },
+      { "title": "Testcontainers Java", "description": "Docker-based test dependencies for integration tests", "url": "https://java.testcontainers.org/", "platform": "docs" },
+      { "title": "RestAssured", "description": "Java DSL for REST API testing — full reference guide", "url": "https://rest-assured.io/", "platform": "docs" },
+      { "title": "GitHub Actions", "description": "CI/CD workflow automation documentation", "url": "https://docs.github.com/en/actions", "platform": "docs" },
+      { "title": "OWASP API Security Top 10", "description": "The definitive guide to API security vulnerabilities", "url": "https://owasp.org/www-project-api-security/", "platform": "docs" }
+    ]
+  },
+  {
+    "category": "YouTube Channels",
+    "icon": "▶️",
+    "resources": [
+      { "title": "Automation Step by Step", "description": "Beginner to advanced automation tutorials — Java & Python", "url": "https://www.youtube.com/@Automationstepbystep", "platform": "youtube" },
+      { "title": "SDET — QA Automation Techie", "description": "Real interview prep, framework design, and coding challenges", "url": "https://www.youtube.com/@sdettech", "platform": "youtube" },
+      { "title": "Tech With Tim — Python Testing", "description": "pytest, mocking, and TDD in Python", "url": "https://www.youtube.com/@TechWithTim", "platform": "youtube" }
+    ]
+  },
+  {
+    "category": "Books & Deep Reads",
+    "icon": "📚",
+    "resources": [
+      { "title": "Martin Fowler — Continuous Delivery", "description": "Foundational text on CI/CD, deployment pipelines, and test automation", "url": "https://martinfowler.com/books/continuousDelivery.html", "platform": "blog" },
+      { "title": "Principles of Chaos Engineering", "description": "The original chaos engineering manifesto from the Netflix team", "url": "https://principlesofchaos.org/", "platform": "blog" },
+      { "title": "Google — Testing at Scale", "description": "How Google approaches software testing across millions of tests", "url": "https://abseil.io/resources/swe-book/html/ch11.html", "platform": "blog" }
+    ]
+  },
+  {
+    "category": "Tools & Playgrounds",
+    "icon": "🛠️",
+    "resources": [
+      { "title": "LeetCode — Easy Interview Questions", "description": "Practice data structures and algorithms for live coding rounds", "url": "https://leetcode.com/explore/interview/card/top-interview-questions-easy/", "platform": "leetcode" },
+      { "title": "ReqRes API", "description": "Hosted REST API for practicing API test automation without a backend", "url": "https://reqres.in/", "platform": "docs" },
+      { "title": "OWASP WebGoat", "description": "Deliberately insecure application for security testing practice", "url": "https://owasp.org/www-project-webgoat/", "platform": "docs" },
+      { "title": "Postman Learning Center", "description": "API testing fundamentals, collections, and automation with Newman", "url": "https://learning.postman.com/", "platform": "docs" }
+    ]
+  }
+]

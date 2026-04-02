@@ -1,0 +1,30 @@
+[
+  {
+    "id": "java",
+    "name": "Java",
+    "icon": "☕",
+    "color": "#f89820",
+    "tools": ["TestNG", "JUnit 5", "Selenium", "RestAssured", "Pact", "WireMock", "JMeter", "Gatling", "Mockito"]
+  },
+  {
+    "id": "python",
+    "name": "Python",
+    "icon": "🐍",
+    "color": "#3776ab",
+    "tools": ["pytest", "Selenium", "Playwright", "requests", "Locust", "hypothesis", "unittest.mock", "Behave"]
+  },
+  {
+    "id": "typescript",
+    "name": "TypeScript",
+    "icon": "🔷",
+    "color": "#3178c6",
+    "tools": ["Playwright", "Cypress", "Jest", "Vitest", "Supertest", "k6", "Pact JS", "MSW"]
+  },
+  {
+    "id": "kotlin",
+    "name": "Kotlin",
+    "icon": "🟣",
+    "color": "#7f52ff",
+    "tools": ["KoTest", "RestAssured", "Espresso", "MockK", "Ktor Test", "Gatling"]
+  }
+]
