@@ -2,12 +2,15 @@ import { useParams, Navigate } from 'react-router-dom'
 import { BookOpen, HelpCircle, Target } from 'lucide-react'
 import TopicCard from '../components/TopicCard.jsx'
 import ProgressBar from '../components/ProgressBar.jsx'
-import { useModuleProgress } from '../context/AppContext.jsx'
-import modules from '../data/modules.json'
+import { useApp, useModuleProgress } from '../context/AppContext.jsx'
+import modulesData from '../data/modules.json'
 
 export default function ModulePage() {
   const { moduleId } = useParams()
-  const mod = modules.find(m => m.id === moduleId)
+  const { state } = useApp()
+  const activePlan = state.savedPlans?.find(p => p.id === state.activePlanId)
+  const activeModules = activePlan ? activePlan.modules : (state.customPlan || modulesData)
+  const mod = activeModules.find(m => m.id === moduleId)
 
   if (!mod) return <Navigate to="/dashboard" replace />
 

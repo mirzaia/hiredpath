@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { RotateCcw } from 'lucide-react'
 import ProgressBar from '../components/ProgressBar.jsx'
 import { useApp, useModuleProgress } from '../context/AppContext.jsx'
-import modules from '../data/modules.json'
+import modulesData from '../data/modules.json'
 
 const CONFIDENCE_COLORS = ['', '#ef4444', '#f59e0b', '#eab308', '#10b981', '#6366f1']
 const CONFIDENCE_LABELS = ['', 'Beginner', 'Basic', 'Comfortable', 'Confident', 'Expert']
@@ -75,7 +75,10 @@ function ModuleProgressRow({ mod }) {
 export default function ProgressPage() {
   const { state, dispatch } = useApp()
 
-  const allTopics = modules.flatMap(m => m.topics)
+  const activePlan = state.savedPlans?.find(p => p.id === state.activePlanId)
+  const activeModules = activePlan ? activePlan.modules : (state.customPlan || modulesData)
+  
+  const allTopics = activeModules.flatMap(m => m.topics)
   const completedTopics = allTopics.filter(t => state.topicProgress[t.id]?.completed).length
   const totalTopics = allTopics.length
   const overallPct = Math.round((completedTopics / totalTopics) * 100)
@@ -138,7 +141,7 @@ export default function ProgressPage() {
 
       {/* Per-module breakdown */}
       <h2 style={{ marginBottom: 16, fontSize: '1.05rem' }}>Module Breakdown</h2>
-      {modules.map(mod => (
+      {activeModules.map(mod => (
         <ModuleProgressRow key={mod.id} mod={mod} />
       ))}
     </div>

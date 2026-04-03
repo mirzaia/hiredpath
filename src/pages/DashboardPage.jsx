@@ -52,10 +52,12 @@ function ModuleCard({ mod, index }) {
 }
 
 export default function DashboardPage() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
 
-  // Overall stats
-  const allTopics = modules.flatMap(m => m.topics)
+  const activePlan = state.savedPlans?.find(p => p.id === state.activePlanId)
+  const activeModules = activePlan ? activePlan.modules : (state.customPlan || modules)
+
+  const allTopics = activeModules.flatMap(m => m.topics)
   const completedTopics = allTopics.filter(t => state.topicProgress[t.id]?.completed).length
   const totalTopics = allTopics.length
   const overallPct = Math.round((completedTopics / totalTopics) * 100)
@@ -67,12 +69,42 @@ export default function DashboardPage() {
     <div>
       {/* Welcome banner */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back 👋</h1>
-        <p className="text-slate-600 m-0">
-          {completedTopics === 0
-            ? "You haven't started yet. Pick a module below to begin."
-            : `${completedTopics} of ${totalTopics} topics completed. Keep going!`}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back 👋</h1>
+            <p className="text-slate-600 m-0">
+              {completedTopics === 0
+                ? "You haven't started yet. Pick a module below to begin."
+                : `${completedTopics} of ${totalTopics} topics completed. Keep going!`}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {state.savedPlans && state.savedPlans.length > 0 && (
+              <select 
+                className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-orange-500/20 shadow-sm"
+                value={state.activePlanId || 'standard'}
+                onChange={(e) => dispatch({ type: 'SET_ACTIVE_PLAN', planId: e.target.value === 'standard' ? null : e.target.value })}
+              >
+                <option value="standard">Standard Roadmap</option>
+                {state.savedPlans.map(p => (
+                  <option key={p.id} value={p.id}>{p.companyName} Roadmap</option>
+                ))}
+              </select>
+            )}
+            
+            {activePlan && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-100 rounded-xl animate-in fade-in slide-in-from-right-4 duration-700 hidden sm:flex">
+                <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white">
+                  <TrendingUp size={16} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-orange-600 uppercase tracking-wider">Tailored Roadmap</div>
+                  <div className="text-[10px] text-orange-500 font-medium">JD Analyzer Active</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -109,18 +141,20 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="text-2xl font-bold text-slate-900 leading-none mb-1">
-                {modules.filter(m => m.topics.some(t => state.topicProgress[t.id]?.completed)).length}
+                {activeModules.filter(m => m.topics.some(t => state.topicProgress[t.id]?.completed)).length}
               </div>
-              <div className="text-sm font-medium text-slate-500">of {modules.length} modules</div>
+              <div className="text-sm font-medium text-slate-500">of {activeModules.length} modules</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Module grid */}
-      <h2 className="text-xl font-bold text-slate-900 mb-4">Modules</h2>
+      <h2 className="text-xl font-bold text-slate-900 mb-4">
+        {activePlan ? `Your Tailored Modules: ${activePlan.companyName}` : 'Standard Modules'}
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modules.map((mod, i) => (
+        {activeModules.map((mod, i) => (
           <ModuleCard key={mod.id} mod={mod} index={i} />
         ))}
       </div>

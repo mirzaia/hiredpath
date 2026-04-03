@@ -5,8 +5,8 @@ import QuestionCard from '../components/QuestionCard.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import modules from '../data/modules.json'
 
-// Flatten all questions with module context
-const ALL_QUESTIONS = modules.flatMap(mod =>
+// Helper to flatten questions with module context
+const getQuestions = (activeModules) => activeModules.flatMap(mod =>
   mod.topics.flatMap(topic =>
     (topic.questions || []).map(q => ({
       ...q,
@@ -24,14 +24,18 @@ export default function QuestionsPage() {
   const [showOnlyPending, setShowOnlyPending] = useState(false)
   const { state } = useApp()
 
+  const activePlan = state.savedPlans?.find(p => p.id === state.activePlanId)
+  const activeModules = activePlan ? activePlan.modules : (state.customPlan || modules)
+  const allQuestions = useMemo(() => getQuestions(activeModules), [activeModules])
+
   const filtered = useMemo(() => {
-    return ALL_QUESTIONS.filter(q => {
+    return allQuestions.filter(q => {
       const matchesModule = activeModule === 'all' || q.moduleId === activeModule
       const matchesQuery = !query || q.question.toLowerCase().includes(query.toLowerCase())
       const matchesPending = !showOnlyPending || !state.completedQuestions.includes(q.id)
       return matchesModule && matchesQuery && matchesPending
     })
-  }, [query, activeModule, showOnlyPending, state.completedQuestions])
+  }, [query, activeModule, showOnlyPending, state.completedQuestions, allQuestions])
 
   const completedCount = state.completedQuestions.length
 
@@ -40,7 +44,7 @@ export default function QuestionsPage() {
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ marginBottom: 4 }}>Questions Bank</h1>
         <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-          {completedCount} of {ALL_QUESTIONS.length} questions answered
+          {completedCount} of {allQuestions.length} questions answered
         </p>
       </div>
 
@@ -71,7 +75,7 @@ export default function QuestionsPage() {
           >
             All modules
           </button>
-          {modules.map(mod => (
+          {activeModules.map(mod => (
             <button
               key={mod.id}
               className={`chip ${activeModule === mod.id ? 'selected' : ''}`}

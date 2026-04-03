@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import TechStackSelector from '../components/TechStackSelector.jsx'
+import JDInput from '../components/JDInput.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import modules from '../data/modules.json'
 
 export default function LandingPage() {
   const [selected, setSelected] = useState([])
+  const [selectedTab, setSelectedTab] = useState('stacks')
   const { dispatch } = useApp()
   const navigate = useNavigate()
 
@@ -35,7 +37,7 @@ export default function LandingPage() {
         <div className="animate-fade-in text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange-100 border border-orange-200 rounded-full mb-6 text-sm font-semibold text-orange-600 shadow-sm">
             <Sparkles size={14} className="text-orange-500" />
-            Sr. SDET II Interview Preparation
+            Software Engineer Interview Preparation
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-slate-900">
@@ -63,16 +65,39 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Stack selection */}
-        <div className="glass-card animate-slide-up stagger-2 p-8 mb-6">
-          <div className="mb-6">
-            <h3 className="text-xl font-bold mb-1.5 mt-0">Choose your tech stacks</h3>
-            <p className="text-sm text-slate-500 m-0">
-              Select the languages and tools you'll be tested on. This personalizes your experience — you can change this anytime.
-            </p>
+        {/* Multi-path selection */}
+        <div className="glass-card animate-slide-up stagger-2 p-8 mb-6 overflow-hidden">
+          <div className="flex gap-4 mb-8 border-b border-slate-100 -mx-8 px-8">
+            <button 
+              onClick={() => setSelectedTab('stacks')}
+              className={`pb-4 text-sm font-bold transition-all px-2 relative ${selectedTab === 'stacks' ? 'text-slate-900 border-b-2 border-orange-500' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Select Tech Stacks
+            </button>
+            <button 
+              onClick={() => setSelectedTab('jd')}
+              className={`pb-4 text-sm font-bold transition-all px-2 relative flex items-center gap-1.5 ${selectedTab === 'jd' ? 'text-slate-900 border-b-2 border-orange-500' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <Sparkles size={14} className={selectedTab === 'jd' ? 'text-orange-500 shadow-sm' : ''} />
+              AI JD Analyzer
+            </button>
           </div>
 
-          <TechStackSelector selected={selected} onToggle={toggle} />
+          {selectedTab === 'stacks' ? (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold mb-1.5 mt-0">Choose your tech stacks</h3>
+                <p className="text-sm text-slate-500 m-0 leading-relaxed">
+                  Select the languages and tools you'll be tested on. This personalizes your experience — you can change this anytime.
+                </p>
+              </div>
+              <TechStackSelector selected={selected} onToggle={toggle} />
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+              <JDInput />
+            </div>
+          )}
         </div>
 
         {/* CTA */}

@@ -1,11 +1,13 @@
+import { useEffect, useState } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
-import { CheckCircle2, Circle, ArrowLeft, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Circle, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
 import ScenarioCard from '../components/ScenarioCard.jsx'
 import QuestionCard from '../components/QuestionCard.jsx'
 import ExternalLink from '../components/ExternalLink.jsx'
 import ConfidenceRating from '../components/ConfidenceRating.jsx'
-import { useTopicState } from '../context/AppContext.jsx'
-import modules from '../data/modules.json'
+import { useApp, useTopicState } from '../context/AppContext.jsx'
+import { generateTopicDetails } from '../services/aiService.js'
+import modulesData from '../data/modules.json'
 
 function TheoryBlock({ text }) {
   // Very lightweight markdown rendering (bold, inline code, code blocks)
@@ -88,12 +90,44 @@ function TheoryBlock({ text }) {
 
 export default function TopicPage() {
   const { moduleId, topicId } = useParams()
-  const mod = modules.find(m => m.id === moduleId)
+  const { state } = useApp()
+  const activePlan = state.savedPlans?.find(p => p.id === state.activePlanId)
+  const activeModules = activePlan ? activePlan.modules : (state.customPlan || modulesData)
+  const mod = activeModules.find(m => m.id === moduleId)
   const topic = mod?.topics.find(t => t.id === topicId)
 
   if (!mod || !topic) return <Navigate to="/dashboard" replace />
 
   const { completed, confidence, toggle, setConfidence } = useTopicState(topicId)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [errorText, setErrorText] = useState('')
+  const { dispatch } = useApp()
+
+  useEffect(() => {
+    if (topic && topic.contentGenerated === false && !isGenerating && state.activePlanId) {
+      const fetchContent = async () => {
+        setIsGenerating(true)
+        setErrorText('')
+        try {
+          const content = await generateTopicDetails(state.apiKey, activePlan.jdText, mod.title, topic.title)
+          dispatch({
+            type: 'SAVE_TOPIC_CONTENT',
+            planId: state.activePlanId,
+            moduleId: mod.id,
+            topicId: topic.id,
+            content
+          })
+        } catch (err) {
+          setErrorText(err.message)
+        } finally {
+          setIsGenerating(false)
+        }
+      }
+      fetchContent()
+    }
+  }, [topic?.id]) // Run once when topic changes
+
+  if (!mod || !topic) return <Navigate to="/dashboard" replace />
 
   // Prev / Next topic navigation
   const topicIndex = mod.topics.findIndex(t => t.id === topicId)
@@ -111,7 +145,16 @@ export default function TopicPage() {
         Back to {mod.title}
       </Link>
 
-      {/* Topic header */}
+      {(topic.contentGenerated === false || isGenerating) ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', textAlign: 'center' }}>
+          <Loader2 className="animate-spin text-orange-500 mb-4" size={32} />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: 8 }}>Generating Topic Details...</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Asking AI to structure the theory and scenarios for {topic.title}</p>
+          {errorText && <p style={{ color: 'var(--color-danger)', marginTop: 16, maxWidth: 400 }}>{errorText}</p>}
+        </div>
+      ) : (
+        <>
+          {/* Topic header */}
       <div className="glass-card animate-fade-in" style={{ padding: '24px 28px', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div>
@@ -222,6 +265,8 @@ export default function TopicPage() {
           </Link>
         ) : <div style={{ flex: 1 }} />}
       </div>
+      </>
+      )}
     </div>
   )
 }
